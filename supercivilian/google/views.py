@@ -8,6 +8,7 @@ from supercivilian.core.responses import (
     APIErrorResponse,
     APISuccessResponse,
 )
+from supercivilian.core.params import SearchParameters, ParameterError
 
 from .utilities import generate_places_api_url
 
@@ -16,8 +17,12 @@ class SearchAutoCompleteView(View):
     """Proxy view for the Google Places API autocomplete endpoint."""
 
     def get(self, request: HttpRequest) -> APIResponse:
-        if (query := request.GET.get("query", "").strip()) == "":
-            return APIErrorResponse(message="Query parameter is required", status=400)
+        parameters = SearchParameters(request)
+
+        try:
+            query = parameters.string("query", required=True)
+        except ParameterError as exception:
+            return APIErrorResponse(message=str(exception), status=400)
 
         url = generate_places_api_url(
             "/autocomplete/json",
