@@ -5,5 +5,6 @@ from django.urls import include, path
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("google/", include("supercivilian.google.urls")),
+    path("arcgis/", include("supercivilian.arcgis.urls")),
 ]
 # fmt: on
