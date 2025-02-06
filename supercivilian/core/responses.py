@@ -57,7 +57,10 @@ class APISuccessResponse(APIResponse):
             **kwargs: If specified, the payload will be a dictionary containing
                 these keyword arguments.
         """
-        super().__init__(success=True, payload=payload or kwargs or None, status=status)
+        if payload is None:
+            payload = kwargs or None
+
+        super().__init__(success=True, payload=payload, status=status)
 
 
 class APIErrorResponse(APIResponse):
@@ -74,4 +77,7 @@ class APIErrorResponse(APIResponse):
             **kwargs: If specified, the error payload will be a dictionary
                 containing these keyword arguments.
         """
-        super().__init__(success=False, error=error or kwargs or None, status=status)
+        if error is None:
+            error = kwargs or None
+
+        super().__init__(success=False, error=error, status=status)
