@@ -13,7 +13,7 @@ def generate_places_api_url(url: str, **params: dict[str, typing.Any]) -> str:
 
     Args:
         url: The endpoint URL.
-        params: The query parameters.
+        **params: The query parameters.
 
     Returns:
         The generated URL.
