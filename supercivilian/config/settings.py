@@ -109,3 +109,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Google API
 
 MAPS_PLATFORM_API_KEY = environment("MAPS_PLATFORM_API_KEY")
+
+# Cache
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "supercivilian",
+    }
+}
