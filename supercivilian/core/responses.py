@@ -35,9 +35,9 @@ class APIResponse(JsonResponse):
             "success": success,
         }
 
-        if success:
+        if success and payload is not None:
             response["payload"] = payload
-        else:
+        elif not success and error is not None:
             response["error"] = error
 
         super().__init__(response, status=status)
@@ -46,24 +46,32 @@ class APIResponse(JsonResponse):
 class APISuccessResponse(APIResponse):
     """Response class for successful API responses."""
 
-    def __init__(self, status: int = 200, **kwargs: typing.Any) -> None:
+    def __init__(
+        self, status: int = 200, payload: typing.Any = None, **kwargs: typing.Any
+    ) -> None:
         """Initialize the response object.
 
         Args:
             status: The HTTP status code. Defaults to 200.
-            **kwargs: Keyword arguments to be included in the response payload.
+            payload: The response payload.
+            **kwargs: If specified, the payload will be a dictionary containing
+                these keyword arguments.
         """
-        super().__init__(success=True, payload=kwargs or None, status=status)
+        super().__init__(success=True, payload=payload or kwargs or None, status=status)
 
 
 class APIErrorResponse(APIResponse):
     """Response class for failed API responses."""
 
-    def __init__(self, status: int = 500, **kwargs: typing.Any) -> None:
+    def __init__(
+        self, status: int = 500, error: typing.Any = None, **kwargs: typing.Any
+    ) -> None:
         """Initialize the response object.
 
         Args:
             status: The HTTP status code. Defaults to 500.
-            **kwargs: Keyword arguments to be included in the error payload.
+            error: The error payload.
+            **kwargs: If specified, the error payload will be a dictionary
+                containing these keyword arguments.
         """
-        super().__init__(success=False, error=kwargs or None, status=status)
+        super().__init__(success=False, error=error or kwargs or None, status=status)
