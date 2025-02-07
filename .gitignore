@@ -18,4 +18,4 @@ __pycache__
 
 # Compiled CSS
 static/styles/css/**.css*
-
+!static/styles/css/normalize.css
