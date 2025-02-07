@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "supercivilian.google",
     "supercivilian.arcgis",
+    "supercivilian.shelters",
 ]
 
 MIDDLEWARE = [
@@ -40,7 +41,7 @@ ROOT_URLCONF = "supercivilian.config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "supercivilian/templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
