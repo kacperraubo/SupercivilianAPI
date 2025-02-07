@@ -7,7 +7,14 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "supercivilian.config.settings")
+    if os.environ.get("DEBUG") == "True":
+        os.environ.setdefault(
+            "DJANGO_SETTINGS_MODULE", "supercivilian.config.settings.development"
+        )
+    else:
+        os.environ.setdefault(
+            "DJANGO_SETTINGS_MODULE", "supercivilian.config.settings.production"
+        )
 
     try:
         from django.core.management import execute_from_command_line
