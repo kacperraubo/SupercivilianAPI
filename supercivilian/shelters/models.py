@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 
 class Shelter(models.Model):
@@ -10,3 +11,6 @@ class Shelter(models.Model):
         return (
             f"Shelter {self.id} ({self.capacity - self.occupancy}/{self.capacity} free)"
         )
+
+    def get_absolute_url(self) -> str:
+        return reverse("shelters:detail", kwargs={"id": self.id})
