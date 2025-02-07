@@ -1,18 +1,16 @@
 from pathlib import Path
 
-import environ
+from .environment import environment
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-environment = environ.Env()
-environ.Env.read_env(BASE_DIR / ".env")
-
-DEBUG = environment("DEBUG", default="False") == "True"
-SECRET_KEY = environment("SECRET_KEY")
-ALLOWED_HOSTS = environment("ALLOWED_HOSTS", default="").split(",")
+# Load environment variables
+environment.read_env(BASE_DIR / ".env")
 
 # Application definition
+
+DEBUG = environment("DEBUG")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -56,21 +54,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "supercivilian.config.wsgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": environment("DB_NAME"),
-        "USER": environment("DB_USER"),
-        "PASSWORD": environment("DB_PASSWORD"),
-        "HOST": environment("DB_HOST"),
-        "PORT": environment("DB_PORT"),
-    }
-}
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -108,22 +91,6 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Google API
+# Security settings
 
-MAPS_PLATFORM_API_KEY = environment("MAPS_PLATFORM_API_KEY")
-
-# Cache
-
-if DEBUG:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
-        }
-    }
-else:
-    CACHES = {
-        "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "supercivilian",
-        }
-    }
+SESSION_COOKIE_AGE = 12 * 60 * 60
