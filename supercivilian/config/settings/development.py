@@ -5,7 +5,9 @@ from .partial.email import *  # noqa: F403
 from .partial.google import *  # noqa: F403
 
 SECRET_KEY = "development-key-dont-use-this-in-production"
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"] + environment("ALLOWED_HOSTS", "").split(",")
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"] + environment(
+    "ALLOWED_HOSTS", default=""
+).split(",")
 
 # Caching settings
 
