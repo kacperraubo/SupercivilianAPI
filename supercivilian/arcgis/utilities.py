@@ -108,6 +108,23 @@ def get_shelters_from_cache(longitude: float, latitude: float) -> list[Shelter] 
     return None
 
 
+def set_shelters_in_cache(
+    longitude: float,
+    latitude: float,
+    shelters: list[dict[str, typing.Any]],
+    timeout: int = 60 * 60,
+) -> None:
+    """Set shelters in the cache.
+
+    Args:
+        longitude: The longitude of the point.
+        latitude: The latitude of the point.
+        shelters: The shelters to set in the cache.
+        timeout: The timeout of the cache. Defaults to 1 hour.
+    """
+    cache.set(f"shelters:{longitude},{latitude}", shelters, timeout=timeout)
+
+
 def get_shelters_for_point(
     longitude: float, latitude: float, range_: float, offset: int = 0, limit: int = 10
 ) -> list[Shelter]:
@@ -157,11 +174,7 @@ def get_shelters_for_point(
         for feature in payload["features"]
     ]
 
-    cache.set(
-        f"shelters:{longitude},{latitude}",
-        payload["features"],
-        timeout=60 * 60,
-    )
+    set_shelters_in_cache(longitude, latitude, shelters)
 
     return shelters[offset : offset + limit]
 
