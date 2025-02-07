@@ -16,5 +16,6 @@ __pycache__
 *.env
 !.env.example
 
-# CSS Map Files
-*.css.map
+# Compiled CSS
+static/styles/css/**.css*
+
