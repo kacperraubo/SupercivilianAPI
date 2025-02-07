@@ -90,6 +90,24 @@ def generate_arcgis_shelter_api_url(**params: dict[str, typing.Any]) -> str:
     }"
 
 
+def get_shelters_from_cache(longitude: float, latitude: float) -> list[Shelter] | None:
+    """Get shelters for a point from the cache.
+
+    Args:
+        longitude: The longitude of the point.
+        latitude: The latitude of the point.
+
+    Returns:
+        A list of shelters, if the shelters exist, else `None`.
+    """
+    if (shelters := cache.get(f"shelters:{longitude},{latitude}")) is not None:
+        return [
+            Shelter.from_api_attributes(shelter["attributes"]) for shelter in shelters
+        ]
+
+    return None
+
+
 def get_shelters_for_point(
     longitude: float, latitude: float, range_: float, offset: int = 0, limit: int = 10
 ) -> list[Shelter]:
@@ -105,11 +123,8 @@ def get_shelters_for_point(
     Returns:
         A list of shelters.
     """
-    if (shelters := cache.get(f"shelters:{longitude},{latitude}")) is not None:
-        return [
-            Shelter.from_api_attributes(shelter["attributes"])
-            for shelter in shelters[offset : offset + limit]
-        ]
+    if (shelters := get_shelters_from_cache(longitude, latitude)) is not None:
+        return shelters[offset : offset + limit]
 
     url = generate_arcgis_shelter_api_url(
         where="1=1",
