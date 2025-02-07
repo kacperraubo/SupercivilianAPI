@@ -1,4 +1,5 @@
 import typing
+
 from django.http import HttpRequest
 
 
@@ -41,7 +42,7 @@ class SearchParameters:
 
     @typing.overload
     def string(
-        self, key: str, default: str, required: bool, strip: bool = True
+        self, key: str, default: str, required: bool = False, strip: bool = True
     ) -> str: ...
 
     def string(
@@ -89,7 +90,7 @@ class SearchParameters:
     ) -> int: ...
 
     @typing.overload
-    def integer(self, key: str, default: int, required: bool) -> int: ...
+    def integer(self, key: str, default: int, required: bool = False) -> int: ...
 
     def integer(
         self, key: str, default: int | None = None, required: bool = False
