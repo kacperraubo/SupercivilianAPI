@@ -47,10 +47,10 @@ class SearchAutoCompleteView(View):
 class PlaceDetailsView(View):
     """Proxy view for the Google Places API details endpoint."""
 
-    def get(self, request: HttpRequest, place_id: str) -> APIResponse:
+    def get(self, request: HttpRequest, id: str) -> APIResponse:
         url = generate_places_api_url(
             "/details/json",
-            place_id=place_id,
+            place_id=id,
             language="pl",
         )
 
