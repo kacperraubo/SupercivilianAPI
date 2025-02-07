@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import dataclasses
 import typing
 import urllib.parse
@@ -43,6 +45,32 @@ class Shelter:
     province: str | None = None
     address: str | None = None
 
+    @classmethod
+    def from_api_attributes(cls, attributes: dict[str, typing.Any]) -> Shelter:
+        """Create a `Shelter` object from the attributes of an API response.
+
+        Args:
+            attributes: The attributes of the shelter.
+
+        Returns:
+            A `Shelter` object.
+        """
+        return cls(
+            id=attributes["ObjectID"],
+            longitude=attributes["x"],
+            latitude=attributes["y"],
+            inventory_type=attributes["Rodzaj_inw"],
+            access_type=attributes["Możliwoś"],
+            area=attributes["Powierzchn"],
+            capacity=attributes["Pojemnoś_"],
+            quality=attributes["Subiektywn"],
+            category=attributes["Rodzaj_obi"],
+            purpose=attributes["Przeznacze"],
+            voivodeship=attributes["Województ"],
+            province=attributes["Powiat"],
+            address=attributes["Adres"],
+        )
+
 
 def generate_arcgis_shelter_api_url(**params: dict[str, typing.Any]) -> str:
     """Generate a URL for the ArcGIS shelter API.
@@ -78,7 +106,10 @@ def get_shelters_for_point(
         A list of shelters.
     """
     if (shelters := cache.get(f"shelters:{longitude},{latitude}")) is not None:
-        return [Shelter(**shelter) for shelter in shelters[offset : offset + limit]]
+        return [
+            Shelter.from_api_attributes(shelter["attributes"])
+            for shelter in shelters[offset : offset + limit]
+        ]
 
     url = generate_arcgis_shelter_api_url(
         where="1=1",
@@ -107,28 +138,48 @@ def get_shelters_for_point(
         return []
 
     shelters = [
-        Shelter(
-            id=feature["attributes"]["ObjectID"],
-            inventory_type=feature["attributes"]["Rodzaj_inw"],
-            access_type=feature["attributes"]["Możliwoś"],
-            area=feature["attributes"]["Powierzchn"],
-            capacity=feature["attributes"]["Pojemnoś_"],
-            quality=feature["attributes"]["Subiektywn"],
-            category=feature["attributes"]["Rodzaj_obi"],
-            purpose=feature["attributes"]["Przeznacze"],
-            voivodeship=feature["attributes"]["Województ"],
-            province=feature["attributes"]["Powiat"],
-            address=feature["attributes"]["Adres"],
-            longitude=feature["geometry"]["x"],
-            latitude=feature["geometry"]["y"],
-        )
+        Shelter.from_api_attributes(feature["attributes"])
         for feature in payload["features"]
     ]
 
     cache.set(
         f"shelters:{longitude},{latitude}",
-        [dataclasses.asdict(shelter) for shelter in shelters],
+        payload["features"],
         timeout=60 * 60,
     )
 
     return shelters[offset : offset + limit]
+
+
+def get_details_for_shelter(id: int) -> Shelter | None:
+    """Get details for a shelter.
+
+    Args:
+        The ID of the shelter.
+
+    Returns:
+        A `Shelter` object, if the shelter exists, else `None`.
+    """
+    if (shelter := cache.get(f"shelter:{id}")) is not None:
+        return Shelter.from_api_attributes(shelter["attributes"])
+
+    url = generate_arcgis_shelter_api_url(
+        where=f"ObjectID = {id}",
+        outFields="*",
+        f="pjson",
+    )
+
+    try:
+        response = requests.get(url)
+        payload = response.json()
+    except requests.RequestException:
+        return None
+
+    if response.status_code != 200 or "features" not in payload:
+        return None
+
+    shelter = Shelter.from_api_attributes(payload["features"][0]["attributes"])
+
+    cache.set(f"shelter:{id}", payload["features"][0], timeout=60 * 60)
+
+    return shelter
