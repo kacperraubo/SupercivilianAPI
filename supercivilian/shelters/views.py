@@ -1,9 +1,9 @@
 import typing
-from django.core.cache import cache
+
 from django.forms import model_to_dict
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.views.generic import View, TemplateView
+from django.views.generic import TemplateView, View
 
 from supercivilian.arcgis.utilities import (
     get_details_for_shelter,
@@ -15,8 +15,8 @@ from supercivilian.core.responses import (
     APISuccessResponse,
 )
 
-from .models import Shelter
 from .constants import WARSAW_COORDINATES
+from .models import Shelter
 
 
 class ShelterDetailView(View):
