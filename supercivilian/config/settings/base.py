@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "supercivilian.google",
     "supercivilian.arcgis",
     "supercivilian.shelters",
+    "supercivilian.core",
 ]
 
 MIDDLEWARE = [
