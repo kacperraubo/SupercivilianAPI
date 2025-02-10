@@ -174,7 +174,7 @@ def get_shelters_for_point(
         for feature in payload["features"]
     ]
 
-    set_shelters_in_cache(longitude, latitude, shelters)
+    set_shelters_in_cache(longitude, latitude, payload["features"])
 
     return shelters[offset : offset + limit]
 
