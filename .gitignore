@@ -16,6 +16,3 @@ __pycache__
 *.env
 !.env.example
 
-# Compiled CSS
-static/styles/css/**.css*
-!static/styles/css/normalize.css
