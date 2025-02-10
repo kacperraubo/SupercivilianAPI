@@ -4,3 +4,6 @@
     justify-content: $justify
     align-items: $align
     gap: $gap
+
+@mixin auto-fill($min-width, $max-width)
+    grid-template-columns: repeat(auto-fill, minmax($min-width, $max-width))
