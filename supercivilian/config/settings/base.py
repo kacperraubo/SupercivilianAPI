@@ -21,7 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "supercivilian.google",
     "supercivilian.arcgis",
-    "supercivilian.shelters",
     "supercivilian.core",
 ]
 
