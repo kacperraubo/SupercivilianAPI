@@ -2,7 +2,6 @@
  * Convert an object into a FormData object.
  *
  * @param {Object} data - The object to convert.
- * @returns {FormData} The FormData object.
  */
 const formData = ({ ...data }) => {
     const formData = new FormData();
@@ -18,7 +17,6 @@ const formData = ({ ...data }) => {
  * Convert an object into a JSON string.
  *
  * @param {Object} data - The object to convert.
- * @returns {string} The JSON string.
  */
 const json = (data) => {
     return JSON.stringify(data);

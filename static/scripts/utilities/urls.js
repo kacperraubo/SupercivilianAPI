@@ -4,7 +4,6 @@
  * @param {string} url - The URL to add parameters to.
  * @param {Object} params - The parameters to add.
  * @param {boolean} [excludeUndefined=true] - Whether to exclude undefined parameters.
- * @returns {string} The URL with parameters.
  */
 const urlWithParams = (url, params, excludeUndefined = true) => {
     if (excludeUndefined) {
