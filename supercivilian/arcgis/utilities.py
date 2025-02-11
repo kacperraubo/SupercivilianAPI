@@ -1,153 +1,122 @@
 from __future__ import annotations
 
-import dataclasses
 import typing
+import logging
 import urllib.parse
 
 import requests
 from django.core.cache import cache
 
+from supercivilian.core.dataclasses import Point
+
 from .constants import BASE_ARCGIS_SHELTER_API_URL
+from .dataclasses import Shelter
+from .typing import ArcGISShelter
+
+logger = logging.getLogger(__name__)
 
 
-@dataclasses.dataclass
-class Shelter:
+def _shelters_cache_key_for_point(point: Point) -> str:
+    """Generate a cache key for shelters for a point.
+
+    Args:
+        point: The point.
     """
-    See [here](https://services-eu1.arcgis.com/HE4WRthd9CIPj0R8/ArcGIS/rest/services/schrony_csv/FeatureServer/0).
+    return f"shelters:{point.longitude},{point.latitude}"
 
-    ObjectID (type: esriFieldTypeInteger, alias: ObjectID, SQL Type: sqlTypeInteger, nullable: true, editable: true)
-    Rodzaj_inw (type: esriFieldTypeString, alias: Rodzaj inwentaryzacji, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Możliwoś (type: esriFieldTypeString, alias: Rodzaj dojazdu do obiektu, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Powierzchn (type: esriFieldTypeInteger, alias: Szacowana powierzchnia m kw., SQL Type: sqlTypeInteger, nullable: true, editable: true)
-    Pojemnoś_ (type: esriFieldTypeInteger, alias: Szacowana pojemność w osobach, SQL Type: sqlTypeInteger, nullable: true, editable: true)
-    Subiektywn (type: esriFieldTypeInteger, alias: Ocena jakościowa obiektu, SQL Type: sqlTypeInteger, nullable: true, editable: true)
-    Rodzaj_obi (type: esriFieldTypeString, alias: Kategoria obiektu, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Przeznacze (type: esriFieldTypeString, alias: Przeznaczenie (MZ), SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Województ (type: esriFieldTypeString, alias: Województwo, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Powiat (type: esriFieldTypeString, alias: Powiat, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    Adres (type: esriFieldTypeString, alias: Adres, SQL Type: sqlTypeNVarchar, length: 4000, nullable: true, editable: true)
-    x (type: esriFieldTypeDouble, alias: x, SQL Type: sqlTypeFloat, nullable: true, editable: true)
-    y (type: esriFieldTypeDouble, alias: y, SQL Type: sqlTypeFloat, nullable: true, editable: true)
-    ObjectId2 (type: esriFieldTypeOID, alias: ObjectId2, SQL Type: sqlTypeInteger, length: 0, nullable: false, editable: false)
+
+def _geodesic_sort(point: Point) -> float:
+    """Closure for sorting shelters by distance from a point.
+
+    Args:
+        point: The point to sort shelters by distance from.
+
+    Returns:
+        A function that can be used as a `key` argument to `sorted` for a list
+        of `Shelter` objects.
     """
 
-    id: str
-    longitude: float
-    latitude: float
-    inventory_type: str | None = None
-    access_type: str | None = None
-    area: int | None = None
-    capacity: int | None = None
-    quality: int | None = None
-    category: str | None = None
-    purpose: str | None = None
-    voivodeship: str | None = None
-    province: str | None = None
-    address: str | None = None
+    def closure(shelter: Shelter) -> float:
+        return point.distance(shelter.point)
 
-    @classmethod
-    def from_api_attributes(cls, attributes: dict[str, typing.Any]) -> Shelter:
-        """Create a `Shelter` object from the attributes of an API response.
-
-        Args:
-            attributes: The attributes of the shelter.
-
-        Returns:
-            A `Shelter` object.
-        """
-        return cls(
-            id=attributes["ObjectID"],
-            longitude=attributes["x"],
-            latitude=attributes["y"],
-            inventory_type=attributes["Rodzaj_inw"],
-            access_type=attributes["Możliwoś"],
-            area=attributes["Powierzchn"],
-            capacity=attributes["Pojemnoś_"],
-            quality=attributes["Subiektywn"],
-            category=attributes["Rodzaj_obi"],
-            purpose=attributes["Przeznacze"],
-            voivodeship=attributes["Województ"],
-            province=attributes["Powiat"],
-            address=attributes["Adres"],
-        )
+    return closure
 
 
-def generate_arcgis_shelter_api_url(**params: dict[str, typing.Any]) -> str:
+def generate_arcgis_shelter_api_url(**params: typing.Any) -> str:
     """Generate a URL for the ArcGIS shelter API.
 
     Args:
-        **params: The query parameters.
+        **params: The query parameters to append to the URL.
 
     Returns:
-        The generated URL.
+        The generated URL with encoded parameters.
     """
-    return f"{BASE_ARCGIS_SHELTER_API_URL}?{
-        urllib.parse.urlencode(
-            {
-                **params,
-            }
-        )
-    }"
+    return f"{BASE_ARCGIS_SHELTER_API_URL}?{urllib.parse.urlencode(params)}"
 
 
-def get_shelters_from_cache(longitude: float, latitude: float) -> list[Shelter] | None:
+def get_shelters_from_cache(point: Point) -> list[Shelter] | None:
     """Get shelters for a point from the cache.
 
     Args:
-        longitude: The longitude of the point.
-        latitude: The latitude of the point.
+        point: The point.
 
     Returns:
-        A list of shelters, if the shelters exist, else `None`.
+        A list of `Shelter` objects if the shelters exist, else `None`.
     """
-    if (shelters := cache.get(f"shelters:{longitude},{latitude}")) is not None:
-        return [
-            Shelter.from_api_attributes(shelter["attributes"]) for shelter in shelters
-        ]
+    if (shelters := cache.get(_shelters_cache_key_for_point(point))) is not None:
+        return [Shelter(**shelter) for shelter in shelters]
 
     return None
 
 
 def set_shelters_in_cache(
-    longitude: float,
-    latitude: float,
-    shelters: list[dict[str, typing.Any]],
+    point: Point,
+    shelters: list[Shelter],
     timeout: int = 60 * 60,
+    sort: bool = True,
 ) -> None:
-    """Set shelters in the cache.
+    """Set shelters for a point in the cache.
 
     Args:
-        longitude: The longitude of the point.
-        latitude: The latitude of the point.
+        point: The point.
         shelters: The shelters to set in the cache.
         timeout: The timeout of the cache. Defaults to 1 hour.
+        sort: Whether to sort the shelters by distance from the point before
+            setting them in the cache. Defaults to `True`.
     """
-    cache.set(f"shelters:{longitude},{latitude}", shelters, timeout=timeout)
+    if sort:
+        shelters.sort(key=_geodesic_sort(point))
+
+    cache.set(
+        _shelters_cache_key_for_point(point),
+        [shelter.dict() for shelter in shelters],
+        timeout=timeout,
+    )
 
 
 def get_shelters_for_point(
-    longitude: float, latitude: float, range_: float, offset: int = 0, limit: int = 10
+    point: Point, range_: float, offset: int = 0, limit: int = 10
 ) -> list[Shelter]:
-    """Get shelters within a given range of a point.
+    """Get shelters within a given range of a point from the cache or the
+    ArcGIS API.
 
     Args:
-        longitude: The longitude of the point.
-        latitude: The latitude of the point.
+        point: The point to search around.
         range_: The range in meters.
         offset: The offset of the first record to return. Defaults to 0.
         limit: The maximum number of records to return. Defaults to 10.
 
     Returns:
-        A list of shelters.
+        A list of shelters sorted by distance from the point.
     """
-    if (shelters := get_shelters_from_cache(longitude, latitude)) is not None:
+    if (shelters := get_shelters_from_cache(point)) is not None:
         return shelters[offset : offset + limit]
 
     url = generate_arcgis_shelter_api_url(
         where="1=1",
         geometryType="esriGeometryPoint",
         spatialRel="esriSpatialRelIntersects",
-        geometry=f"{longitude},{latitude}",
+        geometry=f"{point.longitude},{point.latitude}",
         inSR=4326,
         distance=range_,
         units="esriSRUnit_Meter",
@@ -161,35 +130,39 @@ def get_shelters_for_point(
     )
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+
         payload = response.json()
-    except requests.RequestException:
+
+        if "features" not in payload:
+            return []
+
+        features: list[ArcGISShelter] = payload["features"]
+    except (requests.RequestException, ValueError):
         return []
 
-    if response.status_code != 200 or "features" not in payload:
-        return []
+    shelters = [Shelter.from_api_data(feature) for feature in features]
+    sorted_shelters = sorted(shelters, key=_geodesic_sort(point))
 
-    shelters = [
-        Shelter.from_api_attributes(feature["attributes"])
-        for feature in payload["features"]
-    ]
+    set_shelters_in_cache(point, sorted_shelters, sort=False)
 
-    set_shelters_in_cache(longitude, latitude, payload["features"])
-
-    return shelters[offset : offset + limit]
+    return sorted_shelters[offset : offset + limit]
 
 
 def get_details_for_shelter(id: int) -> Shelter | None:
     """Get details for a shelter.
 
     Args:
-        The ID of the shelter.
+        id: The ID of the shelter.
 
     Returns:
-        A `Shelter` object, if the shelter exists, else `None`.
+        A `Shelter` object if the shelter exists, else `None`.
     """
-    if (shelter := cache.get(f"shelter:{id}")) is not None:
-        return Shelter.from_api_attributes(shelter["attributes"])
+    cache_key = f"shelter:{id}"
+
+    if (shelter := cache.get(cache_key)) is not None:
+        return Shelter(**shelter)
 
     url = generate_arcgis_shelter_api_url(
         where=f"ObjectID = {id}",
@@ -198,16 +171,22 @@ def get_details_for_shelter(id: int) -> Shelter | None:
     )
 
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+
         payload = response.json()
-    except requests.RequestException:
+
+        if "features" not in payload:
+            return None
+
+        features: list[ArcGISShelter] = payload["features"]
+    except (requests.RequestException, ValueError):
         return None
 
-    if response.status_code != 200 or "features" not in payload:
+    if len(features) == 0:
         return None
 
-    shelter = Shelter.from_api_attributes(payload["features"][0]["attributes"])
-
-    cache.set(f"shelter:{id}", payload["features"][0], timeout=60 * 60)
+    shelter = Shelter.from_api_data(features[0])
+    cache.set(cache_key, shelter.dict(), timeout=60 * 60)
 
     return shelter
