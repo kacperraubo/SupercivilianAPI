@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 
 class ShelterSerializer(serializers.Serializer):
-    """Serialize for `Shelter` objects."""
+    """Serializer for `Shelter` objects."""
 
     id = serializers.IntegerField()
     longitude = serializers.FloatField()
