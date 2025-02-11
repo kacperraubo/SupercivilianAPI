@@ -1,9 +1,9 @@
 import typing
 
-from django.http import JsonResponse
+from rest_framework.response import Response
 
 
-class APIResponse(JsonResponse):
+class APIResponse(Response):
     """Base response class for API responses.
 
     Defines a standard structure for API responses consisting of:
