@@ -96,3 +96,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Security settings
 
 SESSION_COOKIE_AGE = 12 * 60 * 60
+
+# REST Framework settings
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
