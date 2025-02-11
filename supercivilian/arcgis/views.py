@@ -1,5 +1,6 @@
 from django.http import HttpRequest
-from rest_framework.views import APIView
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import serializers, status, views
 
 from supercivilian.core.dataclasses import Point
 from supercivilian.core.params import ParameterError, SearchParameters
@@ -8,32 +9,76 @@ from supercivilian.core.responses import (
     APIResponse,
     APISuccessResponse,
 )
+from supercivilian.core.utilities import (
+    error_response_serializer,
+    success_response_serializer,
+)
 
+from .serializers import ShelterSerializer
 from .utilities import get_shelters_for_point
 
 
-class GetSheltersForPointView(APIView):
-    """GET shelters within a given range of a point.
+class GetSheltersForPointView(views.APIView):
+    """GET shelters within a given range of a point."""
 
-    Expects a `longitude` and `latitude` url parameter that contains the point
-    coordinates.
-
-    Additionally, the following optional url parameters are supported:
-    - `offset`: The offset of the shelters to return. Defaults to 0.
-    - `limit`: The number of shelters to return. Defaults to 10.
-    - `range`: The range of the shelters to return (in meters). Defaults to
-      30km. Can be at most 1000km.
-
-    Responses:
-        - 200: A list of shelters.
-            - payload: A list of `Shelter` objects, with the `distance`
-              attribute set to the distance of the shelter from the point in
-              meters. See the `supercivilian.arcgis.dataclasses.Shelter`
-              documentation for more information about the `Shelter` object.
-        - 400: Invalid query parameters.
-        - 500: Internal server error.
-    """
-
+    @extend_schema(
+        operation_id="get_shelters_for_point",
+        tags=["arcgis"],
+        summary="Get shelters within a given range of a point",
+        description="Get shelters within a given range of a point",
+        parameters=[
+            OpenApiParameter(
+                name="longitude",
+                description="The longitude of the point",
+                required=True,
+                type=float,
+            ),
+            OpenApiParameter(
+                name="latitude",
+                description="The latitude of the point",
+                required=True,
+                type=float,
+            ),
+            OpenApiParameter(
+                name="offset",
+                description="The offset of the shelters to return",
+                default=0,
+                type=int,
+            ),
+            OpenApiParameter(
+                name="limit",
+                description="The number of shelters to return",
+                default=10,
+                type=int,
+            ),
+            OpenApiParameter(
+                name="range",
+                description="How far from the point to search for shelters (in meters). Maximum is `1000 * 1000`.",
+                default=30 * 1000,
+                type=int,
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=success_response_serializer(
+                    name="Shelter List",
+                    serializer=ShelterSerializer,
+                    many=True,
+                ),
+                description="A list of shelters",
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                response=error_response_serializer(
+                    name="GetSheltersForPointError",
+                    error={
+                        "message": serializers.CharField(),
+                    },
+                ),
+                description="Invalid query parameters",
+            ),
+        },
+        auth=[],
+    )
     def get(self, request: HttpRequest) -> APIResponse:
         parameters = SearchParameters(request)
 
@@ -44,13 +89,16 @@ class GetSheltersForPointView(APIView):
             limit = parameters.integer("limit", default=10)
             range_ = parameters.integer("range", default=30 * 1000)
         except ParameterError as exception:
-            return APIErrorResponse(message=str(exception), status=400)
+            return APIErrorResponse(
+                message=str(exception), status=status.HTTP_400_BAD_REQUEST
+            )
 
         point = Point(longitude=longitude, latitude=latitude)
 
         if range_ > 1000 * 1000:
             return APIErrorResponse(
-                message="Range must be less than 1000km", status=400
+                message="Range must be less than 1000km",
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         shelters = get_shelters_for_point(point, range_, offset, limit)
