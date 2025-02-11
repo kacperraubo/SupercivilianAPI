@@ -1,6 +1,6 @@
 from django.http import HttpRequest
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
-from rest_framework import serializers, status, views
+from rest_framework import status, views
 
 from supercivilian.core.dataclasses import Point
 from supercivilian.core.params import ParameterError, SearchParameters
@@ -10,9 +10,9 @@ from supercivilian.core.responses import (
     APISuccessResponse,
 )
 from supercivilian.core.utilities import (
-    error_response_serializer,
     success_response_serializer,
 )
+from supercivilian.core.serializers import ErrorWithMessageSerializer
 
 from .serializers import ShelterSerializer
 from .utilities import get_shelters_for_point
@@ -68,12 +68,7 @@ class GetSheltersForPointView(views.APIView):
                 description="A list of shelters",
             ),
             status.HTTP_400_BAD_REQUEST: OpenApiResponse(
-                response=error_response_serializer(
-                    name="GetSheltersForPointError",
-                    error={
-                        "message": serializers.CharField(),
-                    },
-                ),
+                response=ErrorWithMessageSerializer,
                 description="Invalid query parameters",
             ),
         },
