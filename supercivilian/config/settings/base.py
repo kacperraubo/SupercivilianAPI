@@ -13,6 +13,7 @@ environment.read_env(BASE_DIR / ".env")
 DEBUG = environment("DEBUG")
 
 INSTALLED_APPS = [
+    "rest_framework",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
