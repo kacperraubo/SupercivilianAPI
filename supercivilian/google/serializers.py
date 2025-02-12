@@ -17,3 +17,5 @@ class PlaceDetailsSerializer(serializers.Serializer):
     url = serializers.CharField()
     formatted_address = serializers.CharField()
     website = serializers.CharField(required=False)
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()

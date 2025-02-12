@@ -153,6 +153,14 @@ class PlaceDetailsView(views.APIView):
                 url=payload.get("result").get("url"),
                 formatted_address=payload.get("result").get("formatted_address"),
                 website=payload.get("result").get("website"),
+                latitude=payload.get("result")
+                .get("geometry")
+                .get("location")
+                .get("lat"),
+                longitude=payload.get("result")
+                .get("geometry")
+                .get("location")
+                .get("lng"),
             )
         )
 
