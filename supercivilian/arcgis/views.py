@@ -9,10 +9,8 @@ from supercivilian.core.responses import (
     APIResponse,
     APISuccessResponse,
 )
-from supercivilian.core.utilities import (
-    success_response_serializer,
-)
 from supercivilian.core.serializers import ErrorWithMessageSerializer
+from supercivilian.core.utilities import success_response_serializer
 
 from .serializers import ShelterSerializer
 from .utilities import get_shelters_for_point
