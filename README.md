@@ -1,4 +1,4 @@
-# Shelter Finder API Documentation
+# Supercivilian API Documentation
 
 ## Overview
 
