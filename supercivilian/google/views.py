@@ -1,6 +1,9 @@
+import dataclasses
+
 import requests
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import status, views
 from rest_framework.request import Request
-from rest_framework.views import APIView
 
 from supercivilian.core.params import ParameterError, SearchParameters
 from supercivilian.core.responses import (
@@ -8,26 +11,56 @@ from supercivilian.core.responses import (
     APIResponse,
     APISuccessResponse,
 )
+from supercivilian.core.serializers import ErrorWithMessageSerializer
+from supercivilian.core.utilities import success_response_serializer
 
+from .dataclasses import AutocompletePrediction, PlaceDetails
+from .serializers import AutocompletePredictionSerializer, PlaceDetailsSerializer
 from .utilities import generate_places_api_url
 
 
-class SearchAutoCompleteView(APIView):
+class SearchAutoCompleteView(views.APIView):
     """GET a list of places matching the query in Poland.
 
-    Expects a `query` url parameter that contains the search query.
-
     Note the prediction details are returned in Polish.
-
-    Responses:
-        - 200: A list of places matching the query.
-            - payload: A list of predictions. See [here](https://developers.google.com/maps/documentation/places/web-service/autocomplete#place_autocomplete_responses)
-              for more information about the format of a prediction.
-        - 400: Invalid query parameter.
-        - 404: No places found.
-        - 500: Internal server error.
     """
 
+    @extend_schema(
+        operation_id="google_search_autocomplete",
+        summary="Search for places by query",
+        description="Search for places by query in Poland.",
+        parameters=[
+            OpenApiParameter(
+                name="query",
+                description="The query to search for",
+                required=True,
+                type=str,
+            )
+        ],
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=success_response_serializer(
+                    name="Search Auto Complete",
+                    serializer=AutocompletePredictionSerializer,
+                    many=True,
+                ),
+                description="A list of predictions for the query",
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Invalid query",
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="No results found",
+            ),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Internal server error",
+            ),
+        },
+        auth=[],
+    )
     def get(self, request: Request) -> APIResponse:
         parameters = SearchParameters(request)
 
@@ -48,29 +81,54 @@ class SearchAutoCompleteView(APIView):
         status = payload.get("status")
 
         if status == "ZERO_RESULTS":
-            return APIErrorResponse(status=404)
+            return APIErrorResponse(message="No results found", status=404)
 
         if response.status_code != 200 or status != "OK":
-            return APIErrorResponse(status=500)
+            return APIErrorResponse(message="Internal server error", status=500)
 
-        return APISuccessResponse(payload=payload.get("predictions"))
+        predictions = [
+            dataclasses.asdict(
+                AutocompletePrediction(
+                    place_id=prediction.get("place_id"),
+                    description=prediction.get("description"),
+                    types=prediction.get("types"),
+                )
+            )
+            for prediction in payload.get("predictions")
+        ]
+
+        return APISuccessResponse(payload=predictions)
 
 
-class PlaceDetailsView(APIView):
+class PlaceDetailsView(views.APIView):
     """GET details for a place.
 
-    Expects an `id` url parameter that contains the place id.
-
     Note the details are returned in Polish.
-
-    Responses:
-        - 200: Details for the place.
-            - payload: Details for the place. See [here](https://developers.google.com/maps/documentation/places/web-service/details#PlacesDetailsResponse)
-              for more information about the format of a place details response.
-        - 404: Place not found.
-        - 500: Internal server error.
     """
 
+    @extend_schema(
+        operation_id="google_place_details",
+        summary="Get details for a place",
+        description="Get details for a place.",
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=success_response_serializer(
+                    name="Place Details",
+                    serializer=PlaceDetailsSerializer,
+                ),
+                description="Details for the place",
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Place not found",
+            ),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Internal server error",
+            ),
+        },
+        auth=[],
+    )
     def get(self, request: Request, id: str) -> APIResponse:
         url = generate_places_api_url(
             "/details/json",
@@ -83,9 +141,19 @@ class PlaceDetailsView(APIView):
         status = payload.get("status")
 
         if status == "ZERO_RESULTS" or status == "NOT_FOUND":
-            return APIErrorResponse(status=404)
+            return APIErrorResponse(message="Place not found", status=404)
 
         if response.status_code != 200 or status != "OK":
-            return APIErrorResponse(status=500)
+            return APIErrorResponse(message="Internal server error", status=500)
 
-        return APISuccessResponse(payload=payload.get("result"))
+        result = dataclasses.asdict(
+            PlaceDetails(
+                id=payload.get("result").get("place_id"),
+                name=payload.get("result").get("name"),
+                url=payload.get("result").get("url"),
+                formatted_address=payload.get("result").get("formatted_address"),
+                website=payload.get("result").get("website"),
+            )
+        )
+
+        return APISuccessResponse(payload=result)
