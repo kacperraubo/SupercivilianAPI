@@ -9,6 +9,7 @@ class ArcGISShelterAttributes(typing.TypedDict):
     """
 
     ObjectID: int
+    ObjectId2: int
     Rodzaj_inw: str | None
     Możliwoś: str | None
     Powierzchn: int | None

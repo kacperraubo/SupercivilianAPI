@@ -122,7 +122,7 @@ def get_shelters_for_point(
         units="esriSRUnit_Meter",
         outFields="*",
         returnGeometry="true",
-        orderByFields="ObjectID ASC",
+        orderByFields="ObjectId2 ASC",
         resultRecordCount="",
         resultType="standard",
         multipatchOption="xyFootprint",
@@ -154,7 +154,7 @@ def get_details_for_shelter(id: int) -> Shelter | None:
     """Get details for a shelter.
 
     Args:
-        id: The ID of the shelter.
+        id: The `ObjectId2` of the shelter.
 
     Returns:
         A `Shelter` object if the shelter exists, else `None`.
@@ -165,7 +165,7 @@ def get_details_for_shelter(id: int) -> Shelter | None:
         return Shelter(**shelter)
 
     url = generate_arcgis_shelter_api_url(
-        where=f"ObjectID = {id}",
+        where=f"ObjectId2 = {id}",
         outFields="*",
         f="pjson",
     )

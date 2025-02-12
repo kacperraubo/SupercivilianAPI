@@ -51,7 +51,7 @@ class Shelter:
         attributes = shelter["attributes"]
 
         return cls(
-            id=attributes["ObjectID"],
+            id=attributes["ObjectId2"],
             longitude=attributes["x"],
             latitude=attributes["y"],
             inventory_type=attributes["Rodzaj_inw"],
