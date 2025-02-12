@@ -1,7 +1,6 @@
 from .base import *  # noqa: F403
 from .environment import environment
 from .partial.database import *  # noqa: F403
-from .partial.email import *  # noqa: F403
 from .partial.google import *  # noqa: F403
 
 SECRET_KEY = environment("SECRET_KEY")
