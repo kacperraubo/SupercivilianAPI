@@ -47,7 +47,7 @@ This API helps users find nearby shelters by combining Google Places API for loc
 
 - `latitude` (required): Geographic latitude
 - `longitude` (required): Geographic longitude
-- `radius` (optional): Search radius in meters (default: 30000)
+- `range` (optional): Search radius in meters (default: 30000)
 - `limit` (optional): Maximum number of results (default: 10)
 - `offset` (optional): Offset of the results (default: 0)
 
