@@ -126,4 +126,4 @@ All endpoints return a consistent error format:
 
 ## ArcGIS API Documentation
 
-You can find our documentation for the ArcGIS API [here](docs/ArcGIS.md).
+You can find our documentation for the ArcGIS API [here](docs/arcgis.md).
