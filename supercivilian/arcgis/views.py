@@ -12,8 +12,8 @@ from supercivilian.core.responses import (
 from supercivilian.core.serializers import ErrorWithMessageSerializer
 from supercivilian.core.utilities import success_response_serializer
 
-from .serializers import ShelterSerializer
-from .utilities import get_shelters_for_point
+from .serializers import ShelterSerializer, ShelterSerializerWithDistance
+from .utilities import get_details_for_shelter, get_shelters_for_point
 
 
 class GetSheltersForPointView(views.APIView):
@@ -60,7 +60,7 @@ class GetSheltersForPointView(views.APIView):
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
                     name="Shelter List",
-                    serializer=ShelterSerializer,
+                    serializer=ShelterSerializerWithDistance,
                     many=True,
                 ),
                 description="A list of shelters",
@@ -99,3 +99,37 @@ class GetSheltersForPointView(views.APIView):
         return APISuccessResponse(
             payload=([shelter.dict(point) for shelter in shelters] if shelters else [])
         )
+
+
+class GetShelterDetailsView(views.APIView):
+    """GET details for a shelter."""
+
+    @extend_schema(
+        operation_id="get_shelter_details",
+        tags=["arcgis"],
+        summary="Get details for a shelter",
+        description="Get details for a shelter",
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=success_response_serializer(
+                    name="Shelter Details",
+                    serializer=ShelterSerializer,
+                ),
+                description="Details for the shelter",
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Shelter not found",
+            ),
+        },
+        auth=[],
+    )
+    def get(self, request: HttpRequest, id: int) -> APIResponse:
+        shelter = get_details_for_shelter(id)
+
+        if shelter is None:
+            return APIErrorResponse(
+                message="Shelter not found", status=status.HTTP_404_NOT_FOUND
+            )
+
+        return APISuccessResponse(payload=shelter.dict())
