@@ -19,6 +19,8 @@ class PlaceDetails:
     """
 
     id: str
+    latitude: float
+    longitude: float
     name: str
     url: str
     formatted_address: str
