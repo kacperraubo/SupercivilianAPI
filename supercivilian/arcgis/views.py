@@ -76,8 +76,8 @@ class GetSheltersForPointView(views.APIView):
         parameters = SearchParameters(request)
 
         try:
-            longitude = parameters.string("longitude", required=True)
-            latitude = parameters.string("latitude", required=True)
+            longitude = parameters.float("longitude", required=True)
+            latitude = parameters.float("latitude", required=True)
             offset = parameters.integer("offset", default=0)
             limit = parameters.integer("limit", default=10)
             range_ = parameters.integer("range", default=30 * 1000)

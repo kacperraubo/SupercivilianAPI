@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 
 from django.http import HttpRequest
@@ -119,3 +121,44 @@ class SearchParameters:
             return int(value)
         except (TypeError, ValueError):
             raise ParameterError(key, f"{key} parameter must be an integer")
+
+    @typing.overload
+    def float(
+        self, key: str, default: None = None, required: typing.Literal[False] = False
+    ) -> float | None: ...
+
+    @typing.overload
+    def float(
+        self, key: str, default: None = None, required: typing.Literal[True] = True
+    ) -> float: ...
+
+    @typing.overload
+    def float(self, key: str, default: float, required: bool = False) -> float: ...
+
+    def float(
+        self, key: str, default: float | None = None, required: bool = False
+    ) -> float | None:
+        """Get a float parameter from the request.
+
+        Args:
+            key: The parameter key.
+            default: The default value.
+                Defaults to None.
+            required: Whether the parameter is required.
+                Defaults to False.
+
+        Returns:
+            The parameter value.
+
+        Raises:
+            ParameterError: If the parameter is required and missing or not a float.
+        """
+        value = self.mapping.get(key, default)
+
+        if required and value is None:
+            raise ParameterError(key, f"{key} parameter is required")
+
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            raise ParameterError(key, f"{key} parameter must be a float")
