@@ -7,20 +7,6 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    DEBUG = os.environ.get("DEBUG")
-
-    if DEBUG not in ["True", "False"]:
-        raise ValueError("DEBUG must be either True or False")
-
-    if DEBUG == "True":
-        os.environ.setdefault(
-            "DJANGO_SETTINGS_MODULE", "supercivilian.config.settings.development"
-        )
-    else:
-        os.environ.setdefault(
-            "DJANGO_SETTINGS_MODULE", "supercivilian.config.settings.production"
-        )
-
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
