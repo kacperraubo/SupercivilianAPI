@@ -10,7 +10,7 @@ environment.read_env(BASE_DIR / ".env")
 
 # Application definition
 
-DEBUG = environment("DEBUG")
+DEBUG = True if environment("DEBUG") == "True" else False
 
 INSTALLED_APPS = [
     "drf_spectacular",
@@ -101,4 +101,14 @@ SESSION_COOKIE_AGE = 12 * 60 * 60
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Supercivilian API",
+    "DESCRIPTION": "Documentation of API that serves for getting details about shelters in Poland.",
+    "VERSION": "v1",
+    'SERVE_INCLUDE_SCHEMA': False,
+    "REDOC_UI_SETTINGS": {
+        "hideDownloadButton": True,  # Hide the download button
+    },
 }
