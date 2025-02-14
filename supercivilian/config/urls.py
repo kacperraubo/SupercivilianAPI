@@ -9,7 +9,7 @@ urlpatterns = [
     path("arcgis/", include("supercivilian.arcgis.urls")),
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
-        "openapi/",
+        "",
         SpectacularRedocView.as_view(),
         name="openapi-schema",
     ),
