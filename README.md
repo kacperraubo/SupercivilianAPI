@@ -1,5 +1,7 @@
 # Supercivilian API Documentation
 
+This API is a proxy of [ArcGIS REST](https://services-eu1.arcgis.com/HE4WRthd9CIPj0R8/arcgis/rest/services/schrony_csv/FeatureServer/0)
+
 ## Overview
 
 This API helps users find nearby shelters by combining Google Places API for location search and ArcGIS for shelter data. The API provides a seamless flow from searching for a location to finding nearby shelters.
