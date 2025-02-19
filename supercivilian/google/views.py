@@ -5,8 +5,8 @@ from django.http import HttpResponse
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
-    extend_schema,
     OpenApiTypes,
+    extend_schema,
 )
 from rest_framework import status, views
 from rest_framework.request import Request
@@ -20,9 +20,13 @@ from supercivilian.core.responses import (
 from supercivilian.core.serializers import ErrorWithMessageSerializer
 from supercivilian.core.utilities import success_response_serializer
 
-from .dataclasses import AutocompletePrediction, PlaceDetails, PlacePhoto
-from .serializers import AutocompletePredictionSerializer, PlaceDetailsSerializer
-from .utilities import generate_places_api_url
+from .dataclasses import AutocompletePrediction, GeocodePlace, PlaceDetails, PlacePhoto
+from .serializers import (
+    AutocompletePredictionSerializer,
+    GeocodePlaceSerializer,
+    PlaceDetailsSerializer,
+)
+from .utilities import generate_geocoding_api_url, generate_places_api_url
 
 
 class SearchAutoCompleteView(views.APIView):
@@ -153,7 +157,7 @@ class PlaceDetailsView(views.APIView):
             return APIErrorResponse(message="Internal server error", status=500)
 
         photos = []
-        for photo in payload.get("result").get("photos"):
+        for photo in payload.get("result").get("photos", []):
             photos.append(
                 dataclasses.asdict(
                     PlacePhoto(
@@ -223,3 +227,71 @@ class PlacePhotoView(views.APIView):
             return APIErrorResponse(message="Invalid photo reference", status=400)
 
         return APIErrorResponse(message="Internal server error", status=500)
+
+
+class ReverseGeocodeView(views.APIView):
+    """GET details for a place from coordinates."""
+
+    @extend_schema(
+        operation_id="google_reverse_geocode",
+        summary="Reverse geocode coordinates to a place",
+        description="Reverse geocode coordinates to a place.",
+        responses={
+            status.HTTP_200_OK: OpenApiResponse(
+                response=success_response_serializer(
+                    name="The place details",
+                    serializer=GeocodePlaceSerializer,
+                ),
+                description="The place details",
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Invalid coordinates",
+            ),
+            status.HTTP_404_NOT_FOUND: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="No results found",
+            ),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Internal server error",
+            ),
+        },
+    )
+    def get(self, request: Request) -> APIResponse:
+        parameters = SearchParameters(request)
+
+        try:
+            latitude = parameters.float("latitude", required=True)
+            longitude = parameters.float("longitude", required=True)
+        except ParameterError as exception:
+            return APIErrorResponse(message=str(exception), status=400)
+
+        url = generate_geocoding_api_url(
+            "/json",
+            latlng=f"{latitude},{longitude}",
+            language="pl",
+        )
+
+        response = requests.get(url)
+        payload = response.json()
+        status = payload.get("status")
+
+        if status == "ZERO_RESULTS":
+            return APIErrorResponse(message="No results found", status=404)
+
+        if response.status_code != 200 or status != "OK":
+            return APIErrorResponse(message="Internal server error", status=500)
+
+        first_result = payload.get("results")[0]
+
+        result = dataclasses.asdict(
+            GeocodePlace(
+                id=first_result.get("place_id"),
+                address=first_result.get("formatted_address"),
+                latitude=first_result.get("geometry").get("location").get("lat"),
+                longitude=first_result.get("geometry").get("location").get("lng"),
+            )
+        )
+
+        return APISuccessResponse(payload=result)
