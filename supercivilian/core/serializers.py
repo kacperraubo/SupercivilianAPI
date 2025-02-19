@@ -4,7 +4,7 @@ from .utilities import error_response_serializer
 
 
 ErrorWithMessageSerializer = error_response_serializer(
-    name="Error With Message",
+    name="ErrorWithMessage",
     error={
         "message": serializers.CharField(required=True),
     },

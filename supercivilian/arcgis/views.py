@@ -59,7 +59,7 @@ class GetSheltersForPointView(views.APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
-                    name="Shelter List",
+                    name="ShelterListPayload",
                     serializer=ShelterSerializerWithDistance,
                     many=True,
                 ),
@@ -112,7 +112,7 @@ class GetShelterDetailsView(views.APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
-                    name="Shelter Details",
+                    name="ShelterDetailsPayload",
                     serializer=ShelterSerializer,
                 ),
                 description="Details for the shelter",

@@ -50,7 +50,7 @@ class SearchAutoCompleteView(views.APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
-                    name="Search Auto Complete",
+                    name="AutocompletePredictionListPayload",
                     serializer=AutocompletePredictionSerializer,
                     many=True,
                 ),
@@ -123,7 +123,7 @@ class PlaceDetailsView(views.APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
-                    name="Place Details",
+                    name="PlaceDetailsPayload",
                     serializer=PlaceDetailsSerializer,
                 ),
                 description="Details for the place",
@@ -239,10 +239,10 @@ class ReverseGeocodeView(views.APIView):
         responses={
             status.HTTP_200_OK: OpenApiResponse(
                 response=success_response_serializer(
-                    name="The place details",
+                    name="GeocodePlacePayload",
                     serializer=GeocodePlaceSerializer,
                 ),
-                description="The place details",
+                description="Place details",
             ),
             status.HTTP_400_BAD_REQUEST: OpenApiResponse(
                 response=ErrorWithMessageSerializer,
@@ -257,6 +257,7 @@ class ReverseGeocodeView(views.APIView):
                 description="Internal server error",
             ),
         },
+        auth=[],
     )
     def get(self, request: Request) -> APIResponse:
         parameters = SearchParameters(request)
