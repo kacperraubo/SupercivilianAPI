@@ -9,6 +9,14 @@ class AutocompletePredictionSerializer(serializers.Serializer):
     types = serializers.ListField(child=serializers.CharField(), required=False)
 
 
+class PlacePhotoSerializer(serializers.Serializer):
+    """Serialize for `PlacePhoto` objects."""
+
+    reference = serializers.CharField()
+    height = serializers.IntegerField()
+    width = serializers.IntegerField()
+
+
 class PlaceDetailsSerializer(serializers.Serializer):
     """Serializer for `PlaceDetails` objects."""
 
@@ -19,3 +27,4 @@ class PlaceDetailsSerializer(serializers.Serializer):
     website = serializers.CharField(required=False)
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
+    photos = PlacePhotoSerializer(many=True, required=False)

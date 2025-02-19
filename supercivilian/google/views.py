@@ -14,7 +14,7 @@ from supercivilian.core.responses import (
 from supercivilian.core.serializers import ErrorWithMessageSerializer
 from supercivilian.core.utilities import success_response_serializer
 
-from .dataclasses import AutocompletePrediction, PlaceDetails
+from .dataclasses import AutocompletePrediction, PlaceDetails, PlacePhoto
 from .serializers import AutocompletePredictionSerializer, PlaceDetailsSerializer
 from .utilities import generate_places_api_url
 
@@ -146,6 +146,18 @@ class PlaceDetailsView(views.APIView):
         if response.status_code != 200 or status != "OK":
             return APIErrorResponse(message="Internal server error", status=500)
 
+        photos = []
+        for photo in payload.get("result").get("photos"):
+            photos.append(
+                dataclasses.asdict(
+                    PlacePhoto(
+                        reference=photo.get("photo_reference"),
+                        height=photo.get("height"),
+                        width=photo.get("width"),
+                    )
+                )
+            )
+
         result = dataclasses.asdict(
             PlaceDetails(
                 id=payload.get("result").get("place_id"),
@@ -161,6 +173,7 @@ class PlaceDetailsView(views.APIView):
                 .get("geometry")
                 .get("location")
                 .get("lng"),
+                photos=photos,
             )
         )
 
