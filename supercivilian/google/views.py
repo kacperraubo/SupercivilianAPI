@@ -1,7 +1,13 @@
 import dataclasses
 
 import requests
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from django.http import HttpResponse
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    OpenApiTypes,
+)
 from rest_framework import status, views
 from rest_framework.request import Request
 
@@ -178,3 +184,42 @@ class PlaceDetailsView(views.APIView):
         )
 
         return APISuccessResponse(payload=result)
+
+
+class PlacePhotoView(views.APIView):
+    """GET a photo for a place."""
+
+    @extend_schema(
+        operation_id="google_place_photo",
+        summary="Get a photo by reference",
+        description="Get a photo by reference.",
+        responses={
+            (200, "image/*"): OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description="The photo",
+            ),
+            status.HTTP_400_BAD_REQUEST: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Invalid photo reference",
+            ),
+            status.HTTP_500_INTERNAL_SERVER_ERROR: OpenApiResponse(
+                response=ErrorWithMessageSerializer,
+                description="Internal server error",
+            ),
+        },
+        auth=[],
+    )
+    def get(self, request: Request, reference: str) -> APIResponse:
+        url = generate_places_api_url(
+            "/photo", photo_reference=reference, maxheight=1000
+        )
+
+        response = requests.get(url)
+
+        if response.status_code == 200:
+            return HttpResponse(response.content, content_type="image/*")
+
+        if response.status_code == 400:
+            return APIErrorResponse(message="Invalid photo reference", status=400)
+
+        return APIErrorResponse(message="Internal server error", status=500)
