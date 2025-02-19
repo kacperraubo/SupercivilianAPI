@@ -28,3 +28,12 @@ class PlaceDetailsSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
     longitude = serializers.FloatField()
     photos = PlacePhotoSerializer(many=True, required=False)
+
+
+class GeocodePlaceSerializer(serializers.Serializer):
+    """Serializer for `GeocodePlace` objects."""
+
+    id = serializers.CharField()
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+    address = serializers.CharField()
