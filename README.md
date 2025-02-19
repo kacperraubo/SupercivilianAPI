@@ -15,6 +15,7 @@ This API helps users find nearby shelters by combining Google Places API for loc
 | `GET /google/search/autocomplete`    | Search for places with autocomplete suggestions |
 | `GET /google/places/<str:id>`        | Get detailed information about a specific place |
 | `GET /google/photos/<str:reference>` | Get a photo by reference                        |
+| `GET /google/geocode/reverse`        | Reverse geocode coordinates to a place          |
 
 ### Shelter Endpoints
 
@@ -53,6 +54,11 @@ This API helps users find nearby shelters by combining Google Places API for loc
 - `range` (optional): Search radius in meters (default: 30000)
 - `limit` (optional): Maximum number of results (default: 10)
 - `offset` (optional): Offset of the results (default: 0)
+
+### Reverse Geocode
+
+- `latitude` (required): Geographic latitude
+- `longitude` (required): Geographic longitude
 
 ## Response Formats
 
@@ -100,6 +106,20 @@ This API helps users find nearby shelters by combining Google Places API for loc
 
 If the photo is found, the response will be an image with a content type of `image/*`.
 If an error occurs, the response will be a json response in the standard error format.
+
+### Reverse Geocode Response
+
+```json
+{
+    "success": true,
+    "payload": {
+        "id": "ChIJJxUiKTlbBEcRuFYwUond0YA",
+        "latitude": 52.4055551,
+        "longitude": 16.9313574,
+        "address": "plac Wiosny Ludów 1, 61-831 Poznań, Polska"
+    }
+}
+```
 
 ### Shelter List Response
 
