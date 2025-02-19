@@ -35,3 +35,15 @@ class PlaceDetails:
     formatted_address: str
     website: str | None = None
     photos: list[PlacePhoto] | None = None
+
+
+@dataclasses.dataclass
+class GeocodePlace:
+    """Our wrapper around the data returned from the Google Places reverse
+    geocoding endpoint.
+    """
+
+    id: str
+    latitude: float
+    longitude: float
+    address: str
