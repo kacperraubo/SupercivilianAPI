@@ -100,9 +100,10 @@ SESSION_COOKIE_AGE = 12 * 60 * 60
 # REST Framework settings
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-    )
+    ),
 }
 
 SPECTACULAR_SETTINGS = {
