@@ -13,6 +13,15 @@ class AutocompletePrediction:
 
 
 @dataclasses.dataclass
+class PlacePhoto:
+    """Our wrapper around Google's `PlacePhoto` object."""
+
+    reference: str
+    height: int
+    width: int
+
+
+@dataclasses.dataclass
 class PlaceDetails:
     """Our wrapper around the data returned from the Google Places Details
     endpoint.
@@ -25,3 +34,16 @@ class PlaceDetails:
     url: str
     formatted_address: str
     website: str | None = None
+    photos: list[PlacePhoto] | None = None
+
+
+@dataclasses.dataclass
+class GeocodePlace:
+    """Our wrapper around the data returned from the Google Places reverse
+    geocoding endpoint.
+    """
+
+    id: str
+    latitude: float
+    longitude: float
+    address: str
