@@ -25,7 +25,7 @@ def success_response_serializer(
         A `Serializer` instance.
     """
     if serializer is None:
-        payload_serializer = inline_serializer(name=f"{name} Payload", fields=payload)
+        payload_serializer = inline_serializer(name=f"{name}Payload", fields=payload)
     else:
         payload_serializer = serializer()
 
@@ -63,7 +63,7 @@ def error_response_serializer(
         A `Serializer` instance.
     """
     if serializer is None:
-        error_serializer = inline_serializer(name=f"{name} Error", fields=error)
+        error_serializer = inline_serializer(name=f"{name}Error", fields=error)
     else:
         error_serializer = serializer()
 

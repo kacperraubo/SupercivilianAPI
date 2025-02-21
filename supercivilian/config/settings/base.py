@@ -15,7 +15,6 @@ DEBUG = True if environment("DEBUG") == "True" else False
 INSTALLED_APPS = [
     "drf_spectacular",
     "rest_framework",
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -28,11 +27,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -101,13 +97,14 @@ SESSION_COOKIE_AGE = 12 * 60 * 60
 
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Supercivilian API",
     "DESCRIPTION": "Documentation of API that serves for getting details about shelters in Poland.",
     "VERSION": "v1",
-    'SERVE_INCLUDE_SCHEMA': False,
+    "SERVE_INCLUDE_SCHEMA": False,
     "REDOC_UI_SETTINGS": {
         "hideDownloadButton": True,  # Hide the download button
     },
